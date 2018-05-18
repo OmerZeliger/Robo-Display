@@ -68,6 +68,11 @@ public class Controller {
     return this.spreadsheet.lockedRowsLength();
   }
   
+  // returns the number of headers
+  int headersLength() {
+    return this.spreadsheet.headersLength();
+  }
+  
   // returns a CheckBox that controls whether the given row is locked
   CheckBox getCheckBox(int r) { // TODO: THE BUG
     Row row = this.spreadsheet.getRow(r);
@@ -100,6 +105,11 @@ public class Controller {
   // returns a list of strings representing the data in the locked row at the given index
   ArrayList<String> getLockedRow(int row) {
     return this.spreadsheet.getLockedRow(row).getData();
+  }
+  
+  // returns a list of strings representing the requested header
+  ArrayList<String> getHeader(int row) {
+    return this.spreadsheet.getHeader(row).getData();
   }
   
   // returns the number of visible rows

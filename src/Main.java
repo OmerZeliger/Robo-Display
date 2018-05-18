@@ -182,17 +182,19 @@ public class Main extends Application {
      */
     int length = 50000;
     ArrayList<Row> rows = new ArrayList<Row>(length);
+    rows.add(new Row(new ArrayList<String>(Arrays.asList("-1", "-1", "HOI", "head")), 0));
+    
     for (int i = 0; i < length; i++) {
       String s = Integer.toString(i);
       Row row;
       if (i % 3 == 0) {
-        row = new Row(new ArrayList<String>(Arrays.asList(s, s, "HI", "INFOOOOOOOOOO")), i);
+        row = new Row(new ArrayList<String>(Arrays.asList(s, s, "HI", "INFOOOOOOOOOO")), i + 1);
       }
       else if (i % 3 == 1) {
-        row = new Row(new ArrayList<String>(Arrays.asList(s, s, "HOI", "info", "infoh")), i);
+        row = new Row(new ArrayList<String>(Arrays.asList(s, s, "HOI", "info", "infoh")), i + 1);
       }
       else {
-        row = new Row(new ArrayList<String>(Arrays.asList(s, s, "HEYA")), i);
+        row = new Row(new ArrayList<String>(Arrays.asList(s, s, "HEYA")), i + 1);
       }
       rows.add(row);
     }
@@ -201,6 +203,7 @@ public class Main extends Application {
     
     Spreadsheet spreadsheet = new Spreadsheet(rows);
     View view = new View(spreadsheet);
+    view.resetScreen();
     //view.zoom = 1.5;
     
     //Button reset = new Button("Click me");
@@ -211,9 +214,19 @@ public class Main extends Application {
     VBox sidebar = view.filterScreen;
     //sidebar.getChildren().add(reset);
     
-    StackPane data = new StackPane();
+    VBox lockAtTop = new VBox();
+    lockAtTop.getChildren().add(view.headerScreen);
+    lockAtTop.getChildren().add(view.lockedScreen);
+    lockAtTop.setMaxWidth(view.headerScreen.getMaxWidth());
+    lockAtTop.setMinWidth(view.headerScreen.getMaxWidth());
+    //lockAtTop.setPrefWidth(view.headerScreen.getMaxWidth());
+    //lockAtTop.setMaxHeight(view.headerScreen.getMaxHeight() + view.lockedScreen.getMaxHeight());
+    //lockAtTop.setMinHeight(view.headerScreen.getMaxHeight() + view.lockedScreen.getMaxHeight());
+    //lockAtTop.setPrefHeight(view.headerScreen.getMaxHeight() + view.lockedScreen.getMaxHeight());
+    
+    VBox data = new VBox();
+    data.getChildren().add(lockAtTop);
     data.getChildren().add(view.scrollScreen);
-    data.getChildren().add(view.lockedScreen);
     data.setAlignment(Pos.TOP_LEFT);
     
     HBox thingy = new HBox();

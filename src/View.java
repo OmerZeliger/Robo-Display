@@ -41,12 +41,14 @@ public class View {
   ScrollPane scrollScreen;
   VBox filterScreen;
   Pane lockedScreen;
+  Pane headerScreen;
 
   int defaultRowWidth = 75;
   int baseTextSize = 12;
   String alternatingBGColor1 = "FFEEEE";
   String alternatingBGColor2 = "E0EEFF";
   String lockColor = "B0CCFF";
+  String headerColor = "2255BB";
   
   List<Integer> rowWidth;
   double zoom;
@@ -114,7 +116,10 @@ public class View {
     
     // creating the locked rows pane
     this.lockedScreen = new Pane();
-    this.lockedScreen.setPrefHeight(this.controller.lockedRowsLength() * this.rowHeight());
+    //this.lockedScreen.setPrefHeight(this.controller.lockedRowsLength() * this.rowHeight());
+    
+    // creating the headers pane
+    this.headerScreen = new Pane();
     
     // drawing all the stuff
     // TODO: add all necessary components to a scene
@@ -130,18 +135,17 @@ public class View {
   // EFFECT: tells the controller to filter (passes all necessary predicates to the model's OrPredicate)
   // must always sort after filtering!
   void filter() {
-    List<Predicate<Row>> filters = new LinkedList<>();
+    PredicateBuilder builder = new PredicateBuilder();
     // goes through the key-filters first
     for (CheckBox b : this.keys) {
       if (b.isSelected()) {
-        filters.add(new KeyPredicate(this.keyColumn, b.getText()));
+        builder.addPredicate(b.getText(), this.keyColumn);
       }
     }
-    // TODO: add other filters too
+    // TODO: add custom filters too?
     
-    this.controller.filter(filters);
+    this.controller.filter(builder.getPredicates());
     this.sort();
-    // TODO: is reset screen here necessary with changeListener?
     this.resetScreen();
   }
   
@@ -151,6 +155,7 @@ public class View {
     this.controller.sort(new ArrayList<Comparator<Row>>());
   }
   
+  // methods for zooming
   // returns the current text size
   int textSize() {
     return (int) (this.baseTextSize * this.zoom);
@@ -168,14 +173,15 @@ public class View {
   
   // TODO: make less messy!
   /**
-   * translates the requested rows into VBoxes with the appropriate positions
-   * start inclusive, end not inclusive
+   * Translates the requested rows into VBoxes with the appropriate positions.
+   * Start inclusive, end not inclusive.
    * 
    * @param start
    * @param end
    */
   ArrayList<HBox> drawRows(int start, int end) {
     ArrayList<HBox> rows = new ArrayList<HBox>(end - start);
+    if (end <= start) { return rows; }
     for (int i = start; i < end; i++) {
       HBox row = new HBox();
       //row.setAlignment(Pos.CENTER_LEFT);
@@ -196,6 +202,7 @@ public class View {
   }
   
   // draws all of the locked rows
+  // TODO: combine with drawRows?
   ArrayList<HBox> drawLockedRows() {
     ArrayList<HBox> rows = new ArrayList<HBox>(this.controller.lockedRowsLength());
     for (int i = 0; i < this.controller.lockedRowsLength(); i++) {
@@ -209,6 +216,22 @@ public class View {
       // TODO: for filtering, keep track of numVisibleLockedRows?
     }
     return rows;
+  }
+  
+  // draws all of the headers
+  ArrayList<HBox> drawHeaders() {
+    ArrayList<HBox> headers = new ArrayList<HBox>(this.controller.headersLength());
+    for (int i = 0; i < this.controller.headersLength(); i++) {
+      HBox header = new HBox();
+      CheckBox lockButton = new CheckBox();
+      lockButton.setDisable(true);
+      header.getChildren().add(lockButton);
+      header.getChildren().addAll(this.translate(this.controller.getHeader(i)));
+      header.relocate(0, i * this.rowHeight());
+      header.setStyle("-fx-background-color: #" + this.headerColor + "; -fx-text-color: white;");
+      headers.add(header);
+    }
+    return headers;
   }
   
   /**
@@ -272,16 +295,30 @@ public class View {
     
     // drawing the locked rows
     // TODO: separate these out?
+    
     //this.lockedScreen.setMinHeight(this.controller.lockedRowsLength() * this.rowHeight());
     
-    // TODO: store this as a variable? it will be helpful for dragging if I decide to do that.
+    // TODO: store this as a variable? it will be helpful for dragging to change row width if I decide to do that.
     int width = 0;
-    for (Integer i : this.rowWidth) {
-      width += i;
+    for (int i = 0; i < this.rowWidth.size(); i++) {
+      width += this.rowWidth(i);
     }
     
+    this.headerScreen.setMaxWidth(width);
+    this.headerScreen.setMinWidth(width);
+    this.headerScreen.setPrefWidth(width);
+    this.headerScreen.setMaxHeight(this.controller.headersLength() * this.rowHeight());
+    this.headerScreen.setMinHeight(this.controller.headersLength() * this.rowHeight());
+    this.headerScreen.setPrefHeight(this.controller.headersLength() * this.rowHeight());
+    this.headerScreen.getChildren().clear();
+    this.headerScreen.getChildren().addAll(this.drawHeaders());
+    
     this.lockedScreen.setMaxWidth(width);
+    this.lockedScreen.setMinWidth(width);
+    this.lockedScreen.setPrefWidth(width);
     this.lockedScreen.setMaxHeight(this.controller.lockedRowsLength() * this.rowHeight());
+    this.lockedScreen.setMinHeight(this.controller.lockedRowsLength() * this.rowHeight());
+    this.lockedScreen.setPrefHeight(this.controller.lockedRowsLength() * this.rowHeight());
     this.lockedScreen.getChildren().clear();
     this.lockedScreen.getChildren().addAll(this.drawLockedRows());
   }

@@ -8,15 +8,31 @@ public class Spreadsheet {
   // fields
   List<Row> data;
   List<Row> lockedRows;
-  List<Predicate<Row>> highlighted;
+  //List<Predicate<Row>> highlighted;
   int numRowsVisible; // the number of visible rows
+  List<Row> headers;
+  
+  // all header rows will have a timestamp of -1
+  Predicate<Row> headerChooser = new KeyPredicate(0, "-1");
   
   // constructor
   Spreadsheet(List<Row> data) {
     this.data = data;
     this.lockedRows = new LinkedList<Row>();
-    this.highlighted = new LinkedList<Predicate<Row>>();
+    //this.highlighted = new LinkedList<Predicate<Row>>();
     this.numRowsVisible = this.data.size();
+    
+    // keeping track of all header rows
+    LinkedList<Row> headers = new LinkedList<Row>();
+    for (Row r : this.data) {
+      if (this.headerChooser.test(r)) {
+        headers.add(r);
+      }
+    }
+    this.headers = new ArrayList<Row>(headers.size());
+    for (Row r : headers) {
+      this.headers.add(r);
+    }
   }
   
   // methods
@@ -119,6 +135,11 @@ public class Spreadsheet {
     return this.lockedRows.get(i);
   }
   
+  // returns the requested header
+  Row getHeader(int i) {
+    return this.headers.get(i);
+  }
+  
   // returns the number of rows in the spreadsheet
   int length() {
     return this.data.size();
@@ -131,6 +152,11 @@ public class Spreadsheet {
   // returns rowsVisible
   int getNumRowsVisible() {
     return this.numRowsVisible;
+  }
+  
+  // returns the number of headers
+  int headersLength() {
+    return this.headers.size();
   }
 }
 
