@@ -225,6 +225,8 @@ public class Main extends Application {
     primaryStage.setScene(scene);
     primaryStage.show();
     view.resetScreen();
+    
+    // let's test git :)
   }
   
   public static void main(String[] args) {
