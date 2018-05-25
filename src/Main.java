@@ -215,6 +215,7 @@ public class Main extends Application {
     //sidebar.getChildren().add(reset);
     
     VBox lockAtTop = new VBox();
+    lockAtTop.getChildren().add(view.controlRowScreen);
     lockAtTop.getChildren().add(view.headerScreen);
     lockAtTop.getChildren().add(view.lockedScreen);
     lockAtTop.setMaxWidth(view.headerScreen.getMaxWidth());

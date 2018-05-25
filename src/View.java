@@ -9,6 +9,7 @@ import java.util.function.Predicate;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -16,6 +17,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
@@ -27,6 +29,7 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -40,15 +43,16 @@ public class View {
   Pane dataScreen;
   ScrollPane scrollScreen;
   VBox filterScreen;
+  Pane controlRowScreen;
   Pane lockedScreen;
-  Pane headerScreen;
+  Pane headerScreen; // TODO: label.setTextFill(Color.WHITE);?
 
   int defaultRowWidth = 75;
   int baseTextSize = 12;
   String alternatingBGColor1 = "FFEEEE";
   String alternatingBGColor2 = "E0EEFF";
   String lockColor = "B0CCFF";
-  String headerColor = "2255BB";
+  String headerColor = "8899EE";
   
   List<Integer> rowWidth;
   double zoom;
@@ -120,6 +124,9 @@ public class View {
     
     // creating the headers pane
     this.headerScreen = new Pane();
+    
+    // creating the control row!
+    this.controlRowScreen = new Pane();
     
     // drawing all the stuff
     // TODO: add all necessary components to a scene
@@ -219,6 +226,7 @@ public class View {
   }
   
   // draws all of the headers
+  // TODO: combine with drawRows?
   ArrayList<HBox> drawHeaders() {
     ArrayList<HBox> headers = new ArrayList<HBox>(this.controller.headersLength());
     for (int i = 0; i < this.controller.headersLength(); i++) {
@@ -228,7 +236,7 @@ public class View {
       header.getChildren().add(lockButton);
       header.getChildren().addAll(this.translate(this.controller.getHeader(i)));
       header.relocate(0, i * this.rowHeight());
-      header.setStyle("-fx-background-color: #" + this.headerColor + "; -fx-text-color: white;");
+      header.setStyle("-fx-background-color: #" + this.headerColor + ";");
       headers.add(header);
     }
     return headers;
@@ -267,6 +275,67 @@ public class View {
     cell.setFont(font);
     cell.setPrefHeight(this.rowHeight());
     cell.setStyle("-fx-border-color: black;");
+  }
+  
+  // draws the control rows for determining column width and sorting
+  HBox drawControlRow() {
+    HBox controlRow = new HBox();
+    CheckBox lockButton = new CheckBox();
+    lockButton.setDisable(true);
+    controlRow.getChildren().add(lockButton);
+    for (int i = 0; i < this.rowWidth.size(); i++) {
+      HBox cell = new HBox();
+      cell.getChildren().add(this.minusButton(i));
+      cell.getChildren().add(this.plusButton(i));
+      cell.getChildren().add(this.sortButton(i));
+      //cell.setPrefWidth(this.rowWidth(i));
+      cell.setMaxWidth(this.rowWidth(i));
+      cell.setMinWidth(this.rowWidth(i));
+      cell.setStyle("-fx-border-color: black; -fx-background-color: blue;");
+      controlRow.getChildren().add(cell);
+    }
+    return controlRow;
+  }
+  
+  // returns a button that reduces the cell size at the given column
+  // TODO: remove the minimum row width (30) and change (5)
+  Button minusButton(int column) {
+    Button minus = new Button("-");
+    minus.setPrefSize(this.rowHeight(), this.rowHeight());
+    minus.setMinSize(this.rowHeight(), this.rowHeight());
+    minus.setPadding(Insets.EMPTY);
+    minus.setOnAction(actionEvent -> {
+      if (this.rowWidth.get(column) > 2 * this.rowHeight() + 5) {
+        this.rowWidth.set(column, this.rowWidth.get(column) - 5);
+        this.resetScreen();
+      }
+    });
+    return minus;
+  }
+  
+  // returns a button that increases the cell width at the given column
+  // TODO: remove the minimum row width (30) and change (5)
+  Button plusButton(int column) {
+    Button plus = new Button("+");
+    plus.setPrefSize(this.rowHeight(), this.rowHeight());
+    plus.setMinSize(this.rowHeight(), this.rowHeight());
+    plus.setPadding(Insets.EMPTY);
+    plus.setOnAction(actionEvent -> {
+      this.rowWidth.set(column, this.rowWidth.get(column) + 5);
+      this.resetScreen();
+    });
+    return plus;
+  }
+  
+  // returns a ChoiceBox for sorting
+  // TODO: add actual sorting
+  // TODO: figure out a way to do priority?
+  MenuButton sortButton(int column) {
+    MenuButton sort = new MenuButton("Sort:");
+    sort.setPrefHeight(this.rowHeight());
+    sort.setMinHeight(this.rowHeight());
+    sort.setPadding(Insets.EMPTY);
+    return sort;
   }
   
   // what is the first on-screen row?
@@ -321,5 +390,13 @@ public class View {
     this.lockedScreen.setPrefHeight(this.controller.lockedRowsLength() * this.rowHeight());
     this.lockedScreen.getChildren().clear();
     this.lockedScreen.getChildren().addAll(this.drawLockedRows());
+    
+    // drawing the control row
+    this.controlRowScreen.setMaxWidth(width);
+    this.controlRowScreen.setMinWidth(width);
+    this.controlRowScreen.setMaxHeight(this.rowHeight());
+    this.controlRowScreen.setMinHeight(this.rowHeight());
+    this.controlRowScreen.getChildren().clear();
+    this.controlRowScreen.getChildren().add(this.drawControlRow());
   }
 }

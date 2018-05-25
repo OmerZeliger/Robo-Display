@@ -10,24 +10,28 @@ public class Spreadsheet {
   List<Row> lockedRows;
   //List<Predicate<Row>> highlighted;
   int numRowsVisible; // the number of visible rows
-  List<Row> headers;
+  List<Row> headers; // TODO: remove headers from data?
   
   // all header rows will have a timestamp of -1
   Predicate<Row> headerChooser = new KeyPredicate(0, "-1");
   
   // constructor
-  Spreadsheet(List<Row> data) {
+  Spreadsheet(ArrayList<Row> data) {
     this.data = data;
     this.lockedRows = new LinkedList<Row>();
     //this.highlighted = new LinkedList<Predicate<Row>>();
     this.numRowsVisible = this.data.size();
     
     // keeping track of all header rows
+    // TODO: move this to the "translate" step?
     LinkedList<Row> headers = new LinkedList<Row>();
     for (Row r : this.data) {
       if (this.headerChooser.test(r)) {
         headers.add(r);
       }
+      //else { //uncomment this if the headers will always be at the start
+      //  break;
+      //}
     }
     this.headers = new ArrayList<Row>(headers.size());
     for (Row r : headers) {
