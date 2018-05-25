@@ -238,6 +238,7 @@ public class Main extends Application {
     
     primaryStage.setScene(scene);
     primaryStage.show();
+    //view.zoom = 2;
     view.resetScreen();
     
     // let's test git :)

@@ -96,6 +96,11 @@ public class Controller {
    });
    return lockButton;
  }
+ 
+ // is the given header row visible?
+ boolean headerVisible(int row) {
+   return this.spreadsheet.getHeader(row).getDisplay();
+ }
   
   // returns a list of strings representing the data in the given row
   ArrayList<String> getRow(int row) {

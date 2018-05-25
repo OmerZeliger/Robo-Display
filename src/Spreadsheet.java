@@ -42,7 +42,15 @@ public class Spreadsheet {
   // methods
   
   // filtering, sorting, highlighting
+  
+  // filtering works by keeping track of how many visible rows there are (n),
+  // sorting so that the non-visible rows are last, 
+  // and then only displaying the first n rows.
+  // All the display stuff is handled in the view on this assumption.
+  
   // EFFECT: displays only rows that match one of the given predicates
+  // (sets display as true if the predicate is true, 
+  // sets display as false if the predicate returns false)
   void filter(List<Predicate<Row>> filters) {
     Predicate<Row> pred = new OrPredicate(filters);
     this.numRowsVisible = 0;

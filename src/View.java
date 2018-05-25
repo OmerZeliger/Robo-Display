@@ -15,9 +15,11 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
@@ -59,7 +61,7 @@ public class View {
   
   int keyColumn = 2;
   List<CheckBox> keys;
-  List<HBox> lockedRows;
+  List<MenuButton> sorts;
   
   // constructor
   View(Spreadsheet spreadsheet) {
@@ -118,6 +120,11 @@ public class View {
     this.filterScreen.getChildren().add(new Label("Show:"));
     this.filterScreen.getChildren().addAll(this.keys);
     
+    this.sorts = new ArrayList<MenuButton>(maxWidth);
+    for (int i = 0; i < maxWidth; i++) {
+      sorts.add(this.sortButton(i));
+    }
+    
     // creating the locked rows pane
     this.lockedScreen = new Pane();
     //this.lockedScreen.setPrefHeight(this.controller.lockedRowsLength() * this.rowHeight());
@@ -157,9 +164,26 @@ public class View {
   }
   
   // EFFECT: sorts the data
-  // this is a stub for now
+  // TODO: a comparator builder (or three)!
   void sort() {
-    this.controller.sort(new ArrayList<Comparator<Row>>());
+    LinkedList<Comparator<Row>> sorters = new LinkedList<>();
+    for (int i = 0; i < this.sorts.size(); i++) {
+      MenuButton b = this.sorts.get(i);
+      if (((RadioMenuItem) b.getItems().get(1)).isSelected()) {
+        //sorters.add(new RowExistsComparator(i));
+        sorters.add(new Alphabetize(i));
+      }
+      else if (((RadioMenuItem) b.getItems().get(2)).isSelected()) {
+        //sorters.add(new RowExistsComparator(i));
+        //sorters.add(new NumberComparator(i));
+      }
+      else if (((RadioMenuItem) b.getItems().get(3)).isSelected()) {
+        //sorters.add(new RowExistsComparator(i));
+        //sorters.add(new ReverseComparator(new NumberComparator(i)));
+      }
+    }
+    this.controller.sort(sorters);
+    this.resetScreen();
   }
   
   // methods for zooming
@@ -227,17 +251,22 @@ public class View {
   
   // draws all of the headers
   // TODO: combine with drawRows?
+  // TODO: filtering
   ArrayList<HBox> drawHeaders() {
     ArrayList<HBox> headers = new ArrayList<HBox>(this.controller.headersLength());
+    int depth = 0;
     for (int i = 0; i < this.controller.headersLength(); i++) {
-      HBox header = new HBox();
-      CheckBox lockButton = new CheckBox();
-      lockButton.setDisable(true);
-      header.getChildren().add(lockButton);
-      header.getChildren().addAll(this.translate(this.controller.getHeader(i)));
-      header.relocate(0, i * this.rowHeight());
-      header.setStyle("-fx-background-color: #" + this.headerColor + ";");
-      headers.add(header);
+      if (this.controller.headerVisible(i)) {
+        HBox header = new HBox();
+        CheckBox lockButton = new CheckBox();
+        lockButton.setDisable(true);
+        header.getChildren().add(lockButton);
+        header.getChildren().addAll(this.translate(this.controller.getHeader(i)));
+        header.relocate(0, depth * this.rowHeight());
+        header.setStyle("-fx-background-color: #" + this.headerColor + ";");
+        headers.add(header);
+        depth++;
+      }
     }
     return headers;
   }
@@ -287,7 +316,7 @@ public class View {
       HBox cell = new HBox();
       cell.getChildren().add(this.minusButton(i));
       cell.getChildren().add(this.plusButton(i));
-      cell.getChildren().add(this.sortButton(i));
+      cell.getChildren().add(this.sorts.get(i));
       //cell.setPrefWidth(this.rowWidth(i));
       cell.setMaxWidth(this.rowWidth(i));
       cell.setMinWidth(this.rowWidth(i));
@@ -305,7 +334,7 @@ public class View {
     minus.setMinSize(this.rowHeight(), this.rowHeight());
     minus.setPadding(Insets.EMPTY);
     minus.setOnAction(actionEvent -> {
-      if (this.rowWidth.get(column) > 2 * this.rowHeight() + 5) {
+      if (this.rowWidth(column) >= 3 * this.rowHeight() + 5) {
         this.rowWidth.set(column, this.rowWidth.get(column) - 5);
         this.resetScreen();
       }
@@ -334,7 +363,43 @@ public class View {
     MenuButton sort = new MenuButton("Sort:");
     sort.setPrefHeight(this.rowHeight());
     sort.setMinHeight(this.rowHeight());
-    sort.setPadding(Insets.EMPTY);
+    sort.setMinWidth(this.rowHeight());
+    sort.setPadding(new Insets(-5)); // TODO: does this work with zooming?
+    
+    RadioMenuItem noSelection = new RadioMenuItem("None");
+    RadioMenuItem alphabetize = new RadioMenuItem("Alphabetize");
+    RadioMenuItem sortIncreasing = new RadioMenuItem("Sort small to large");
+    RadioMenuItem sortDecreasing = new RadioMenuItem("Sort large to small");
+    
+    noSelection.setOnAction(actionEvent -> {
+      this.sort();
+    });
+    
+    alphabetize.setOnAction(actionEvent -> {
+      this.sort();
+    });
+    
+    sortIncreasing.setOnAction(actionEvent -> {
+      this.sort();
+    });
+    
+    sortDecreasing.setOnAction(actionEvent -> {
+      this.sort();
+    });
+    
+    ToggleGroup menuItems = new ToggleGroup();
+    menuItems.getToggles().add(noSelection);
+    menuItems.getToggles().add(alphabetize);
+    menuItems.getToggles().add(sortIncreasing);
+    menuItems.getToggles().add(sortDecreasing);
+    
+    sort.getItems().add(noSelection);
+    sort.getItems().add(alphabetize);
+    sort.getItems().add(sortIncreasing);
+    sort.getItems().add(sortDecreasing);
+    
+    noSelection.setSelected(true);
+    
     return sort;
   }
   
@@ -357,34 +422,41 @@ public class View {
   
   // EFFECT: resets the screen
   void resetScreen() {
-    // drawing the rows
-    this.dataScreen.setPrefHeight(this.controller.numRowsVisible() * this.rowHeight());
-    this.dataScreen.getChildren().clear();
-    this.dataScreen.getChildren().addAll(this.drawRows(this.firstVisibleRow(), this.lastVisibleRow()));
-    
-    // drawing the locked rows
-    // TODO: separate these out?
-    
-    //this.lockedScreen.setMinHeight(this.controller.lockedRowsLength() * this.rowHeight());
-    
     // TODO: store this as a variable? it will be helpful for dragging to change row width if I decide to do that.
     int width = 0;
     for (int i = 0; i < this.rowWidth.size(); i++) {
       width += this.rowWidth(i);
     }
     
-    this.headerScreen.setMaxWidth(width);
-    this.headerScreen.setMinWidth(width);
-    this.headerScreen.setPrefWidth(width);
-    this.headerScreen.setMaxHeight(this.controller.headersLength() * this.rowHeight());
-    this.headerScreen.setMinHeight(this.controller.headersLength() * this.rowHeight());
-    this.headerScreen.setPrefHeight(this.controller.headersLength() * this.rowHeight());
+    // drawing the rows
+    this.dataScreen.setPrefHeight(this.controller.numRowsVisible() * this.rowHeight());
+    //this.dataScreen.setPreFWidth(width);
+    this.dataScreen.getChildren().clear();
+    this.dataScreen.getChildren().addAll(this.drawRows(this.firstVisibleRow(), this.lastVisibleRow()));
+    
+    // setting ScrollScreen's width
+    //this.scrollScreen.setMinWidth(this.dataScreen.getWidth());
+    
+    // drawing the locked rows
+    // TODO: separate these out?
+    
+    //this.lockedScreen.setMinHeight(this.controller.lockedRowsLength() * this.rowHeight());
+    
+    // drawing the header rows
     this.headerScreen.getChildren().clear();
     this.headerScreen.getChildren().addAll(this.drawHeaders());
+    // TODO: is setting it to "width" ok? The checkbox on the left adds width too...
+    //this.headerScreen.setMaxWidth(width);
+    //this.headerScreen.setMinWidth(width);
+    //this.headerScreen.setPrefWidth(width);
+    this.headerScreen.setMaxHeight(this.headerScreen.getChildren().size() * this.rowHeight());
+    this.headerScreen.setMinHeight(this.headerScreen.getChildren().size() * this.rowHeight());
+    this.headerScreen.setPrefHeight(this.controller.headersLength() * this.rowHeight());
     
-    this.lockedScreen.setMaxWidth(width);
-    this.lockedScreen.setMinWidth(width);
-    this.lockedScreen.setPrefWidth(width);
+    // drawing the locked rows
+    //this.lockedScreen.setMaxWidth(width);
+    //this.lockedScreen.setMinWidth(width);
+    //this.lockedScreen.setPrefWidth(width);
     this.lockedScreen.setMaxHeight(this.controller.lockedRowsLength() * this.rowHeight());
     this.lockedScreen.setMinHeight(this.controller.lockedRowsLength() * this.rowHeight());
     this.lockedScreen.setPrefHeight(this.controller.lockedRowsLength() * this.rowHeight());
@@ -392,11 +464,13 @@ public class View {
     this.lockedScreen.getChildren().addAll(this.drawLockedRows());
     
     // drawing the control row
-    this.controlRowScreen.setMaxWidth(width);
-    this.controlRowScreen.setMinWidth(width);
+    //this.controlRowScreen.setMaxWidth(width);
+    //this.controlRowScreen.setMinWidth(width);
     this.controlRowScreen.setMaxHeight(this.rowHeight());
     this.controlRowScreen.setMinHeight(this.rowHeight());
     this.controlRowScreen.getChildren().clear();
     this.controlRowScreen.getChildren().add(this.drawControlRow());
+    
+    //this.scrollScreen.setPrefWidth(width + 30); // TODO: fix this
   }
 }
