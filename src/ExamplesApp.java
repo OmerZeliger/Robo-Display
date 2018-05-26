@@ -56,14 +56,14 @@ public class ExamplesApp {
     this.init();
     LinkedList<Comparator<Row>> sorters = new LinkedList<>();
     sorters.add(this.abc2);
-    this.sheetA.sort(sorters);
+    this.sheetA.sort(sorters, true);
     t.checkExpect(sheetA.data, 
         new ArrayList<Row>(Arrays.asList(rowB, rowA, rowC)));
     
     sorters = new LinkedList<>();
     sorters.add(this.abc2);
     sorters.add(this.abc3);
-    this.sheet1.sort(sorters);
+    this.sheet1.sort(sorters, true);
     t.checkExpect(sheet1.data, 
         new ArrayList<Row>(Arrays.asList(row2, row1, row3)));
     
@@ -71,7 +71,7 @@ public class ExamplesApp {
     this.init();
     sorters = new LinkedList<>();
     sorters.add(this.abc3);
-    this.sheetA.sort(sorters);
+    this.sheetA.sort(sorters, true);
     t.checkExpect(sheetA.data, 
         new ArrayList<Row>(Arrays.asList(rowB, rowC, rowA)));
   }

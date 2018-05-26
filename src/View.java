@@ -19,6 +19,7 @@ import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
@@ -121,8 +122,9 @@ public class View {
     this.filterScreen.getChildren().addAll(this.keys);
     
     this.sorts = new ArrayList<MenuButton>(maxWidth);
+    ToggleGroup singleSort = new ToggleGroup();
     for (int i = 0; i < maxWidth; i++) {
-      sorts.add(this.sortButton(i));
+      sorts.add(this.sortButton(i, singleSort));
     }
     
     // creating the locked rows pane
@@ -159,30 +161,30 @@ public class View {
     // TODO: add custom filters too?
     
     this.controller.filter(builder.getPredicates());
-    this.sort();
+    this.sort(true);
     this.resetScreen();
   }
   
   // EFFECT: sorts the data
   // TODO: a comparator builder (or three)!
-  void sort() {
+  void sort(boolean sortAll) {
     LinkedList<Comparator<Row>> sorters = new LinkedList<>();
     for (int i = 0; i < this.sorts.size(); i++) {
       MenuButton b = this.sorts.get(i);
-      if (((RadioMenuItem) b.getItems().get(1)).isSelected()) {
-        //sorters.add(new RowExistsComparator(i));
+      if (((RadioMenuItem) b.getItems().get(0)).isSelected()) {
+        sorters.add(new ColumnExistsComparator(i));
         sorters.add(new Alphabetize(i));
       }
-      else if (((RadioMenuItem) b.getItems().get(2)).isSelected()) {
-        //sorters.add(new RowExistsComparator(i));
-        //sorters.add(new NumberComparator(i));
+      else if (((RadioMenuItem) b.getItems().get(1)).isSelected()) {
+        sorters.add(new ColumnExistsComparator(i));
+        sorters.add(new NumberComparator(i));
       }
-      else if (((RadioMenuItem) b.getItems().get(3)).isSelected()) {
-        //sorters.add(new RowExistsComparator(i));
-        //sorters.add(new ReverseComparator(new NumberComparator(i)));
+      else if (((RadioMenuItem) b.getItems().get(2)).isSelected()) {
+        sorters.add(new ColumnExistsComparator(i));
+        sorters.add(new ReverseComparator(new NumberComparator(i)));
       }
     }
-    this.controller.sort(sorters);
+    this.controller.sort(sorters, false);
     this.resetScreen();
   }
   
@@ -323,6 +325,19 @@ public class View {
       cell.setStyle("-fx-border-color: black; -fx-background-color: blue;");
       controlRow.getChildren().add(cell);
     }
+    
+    //adding a "clear sort" button
+    Button clearSort = new Button("Clear");
+    clearSort.setOnAction(actionEvent -> {
+      for (MenuButton m : this.sorts) {
+        for (MenuItem r : m.getItems()) {
+          ((RadioMenuItem) r).setSelected(false);
+        }
+      }
+      this.sort(false);
+    });
+    controlRow.getChildren().add(clearSort);
+    
     return controlRow;
   }
   
@@ -359,46 +374,50 @@ public class View {
   // returns a ChoiceBox for sorting
   // TODO: add actual sorting
   // TODO: figure out a way to do priority?
-  MenuButton sortButton(int column) {
+  MenuButton sortButton(int column, ToggleGroup singleSort) {
     MenuButton sort = new MenuButton("Sort:");
     sort.setPrefHeight(this.rowHeight());
     sort.setMinHeight(this.rowHeight());
     sort.setMinWidth(this.rowHeight());
     sort.setPadding(new Insets(-5)); // TODO: does this work with zooming?
     
-    RadioMenuItem noSelection = new RadioMenuItem("None");
+    //RadioMenuItem noSelection = new RadioMenuItem("None");
     RadioMenuItem alphabetize = new RadioMenuItem("Alphabetize");
     RadioMenuItem sortIncreasing = new RadioMenuItem("Sort small to large");
     RadioMenuItem sortDecreasing = new RadioMenuItem("Sort large to small");
     
-    noSelection.setOnAction(actionEvent -> {
-      this.sort();
-    });
+    singleSort.getToggles().add(alphabetize);
+    singleSort.getToggles().add(sortIncreasing);
+    singleSort.getToggles().add(sortDecreasing);
+    
+    //noSelection.setOnAction(actionEvent -> {
+    //  this.sort();
+    //});
     
     alphabetize.setOnAction(actionEvent -> {
-      this.sort();
+      this.sort(false);
     });
     
     sortIncreasing.setOnAction(actionEvent -> {
-      this.sort();
+      this.sort(false);
     });
     
     sortDecreasing.setOnAction(actionEvent -> {
-      this.sort();
+      this.sort(false);
     });
     
-    ToggleGroup menuItems = new ToggleGroup();
-    menuItems.getToggles().add(noSelection);
-    menuItems.getToggles().add(alphabetize);
-    menuItems.getToggles().add(sortIncreasing);
-    menuItems.getToggles().add(sortDecreasing);
+    //ToggleGroup menuItems = new ToggleGroup();
+    //menuItems.getToggles().add(noSelection);
+    //menuItems.getToggles().add(alphabetize);
+    //menuItems.getToggles().add(sortIncreasing);
+    //menuItems.getToggles().add(sortDecreasing);
     
-    sort.getItems().add(noSelection);
+    //sort.getItems().add(noSelection);
     sort.getItems().add(alphabetize);
     sort.getItems().add(sortIncreasing);
     sort.getItems().add(sortDecreasing);
     
-    noSelection.setSelected(true);
+    //noSelection.setSelected(true);
     
     return sort;
   }

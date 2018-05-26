@@ -45,8 +45,8 @@ public class Controller {
   }
   
   // EFFECT: sorts the spreadsheet
-  void sort(List<Comparator<Row>> sorters) {
-    this.spreadsheet.sort(sorters);
+  void sort(List<Comparator<Row>> sorters, boolean sortAll) {
+    this.spreadsheet.sort(sorters, sortAll);
   }
   
   // finds the longest row and returns its length

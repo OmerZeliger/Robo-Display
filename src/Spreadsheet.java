@@ -75,13 +75,18 @@ public class Spreadsheet {
    */
   
   // EFFECT: sorts the rows by order of the comparators (highest priority is first)
-  void sort(List<Comparator<Row>> sorters) {
+  void sort(List<Comparator<Row>> sorters, boolean sortAll) {
     ArrayList<Comparator<Row>> comparators = new ArrayList<>(sorters.size() + 2);
     comparators.add(new VisibleComparator());
     comparators.addAll(sorters);
     comparators.add(new IDComparator());
     Heapsort<Row> heapsort = new Heapsort<Row>();
-    heapsort.heapsort(this.data, new StackingComparator(comparators));
+    if (sortAll) { // sorts every single row
+      heapsort.heapsort(this.data, new StackingComparator(comparators));
+    }
+    else { // sorts only the visible rows, done for efficiency's sake
+      heapsort.heapsort(this.data, new StackingComparator(comparators), this.numRowsVisible);
+    }
   }
   
   // EFFECT: sorts the rows by their serial ID
