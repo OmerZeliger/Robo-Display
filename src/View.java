@@ -88,7 +88,7 @@ public class View {
     });
      */
     
-    this.scrollScreen.setPrefWidth(450); // TODO: revisit, make this not terrible
+    //this.scrollScreen.setPrefWidth(450); // TODO: revisit, make this not terrible
     
     // harder to find values
     int maxWidth = this.controller.maxRowLength();
@@ -139,7 +139,7 @@ public class View {
     
     // drawing all the stuff
     // TODO: add all necessary components to a scene
-    // so far: the central scroll pane, the filter sidebar
+    // so far: the central scroll pane, the filter sidebar, all the stuff locked at the top
     
     // TODO: is resetScreen necessary here?
     this.resetScreen();
@@ -147,7 +147,6 @@ public class View {
   
   // TODO: BorderPane for the outside?
   
-  // TODO: delegate predicate creation to the controller
   // EFFECT: tells the controller to filter (passes all necessary predicates to the model's OrPredicate)
   // must always sort after filtering!
   void filter() {
@@ -167,6 +166,7 @@ public class View {
   
   // EFFECT: sorts the data
   // TODO: a comparator builder (or three)!
+  // TODO: remove boolean flag?
   void sort(boolean sortAll) {
     LinkedList<Comparator<Row>> sorters = new LinkedList<>();
     for (int i = 0; i < this.sorts.size(); i++) {
@@ -177,14 +177,16 @@ public class View {
       }
       else if (((RadioMenuItem) b.getItems().get(1)).isSelected()) {
         sorters.add(new ColumnExistsComparator(i));
+        sorters.add(new IsNumberComparator(i));
         sorters.add(new NumberComparator(i));
       }
       else if (((RadioMenuItem) b.getItems().get(2)).isSelected()) {
         sorters.add(new ColumnExistsComparator(i));
+        sorters.add(new IsNumberComparator(i));
         sorters.add(new ReverseComparator(new NumberComparator(i)));
       }
     }
-    this.controller.sort(sorters, false);
+    this.controller.sort(sorters, sortAll);
     this.resetScreen();
   }
   
@@ -240,9 +242,18 @@ public class View {
     ArrayList<HBox> rows = new ArrayList<HBox>(this.controller.lockedRowsLength());
     for (int i = 0; i < this.controller.lockedRowsLength(); i++) {
       HBox row = new HBox();
+      
       CheckBox lockButton = this.controller.getLockedCheckBox(i); // TODO: combine with getCheckBox?
       row.getChildren().add(lockButton);
+      
       row.getChildren().addAll(this.translate(this.controller.getLockedRow(i)));
+      
+      Button jumpToButton = this.controller.getJumpToButton(i);
+      jumpToButton.setPrefHeight(this.rowHeight());
+      jumpToButton.setMinHeight(this.rowHeight());
+      jumpToButton.setPadding(Insets.EMPTY);
+      row.getChildren().add(jumpToButton);
+      
       row.relocate(0, i * this.rowHeight());
       row.setStyle("-fx-background-color: #" + this.lockColor + ";");
       rows.add(row);
@@ -251,9 +262,14 @@ public class View {
     return rows;
   }
   
+  // EFFECT: jumps to the given row
+  void jumpTo(int row) {
+    double percent = (1.0 * row) / Math.max(1.0 * this.controller.numRowsVisible() - 1, 1);
+    this.scrollScreen.setVvalue(percent);
+  }
+  
   // draws all of the headers
   // TODO: combine with drawRows?
-  // TODO: filtering
   ArrayList<HBox> drawHeaders() {
     ArrayList<HBox> headers = new ArrayList<HBox>(this.controller.headersLength());
     int depth = 0;
@@ -300,7 +316,7 @@ public class View {
     return labels;
   }
   
-  // EFFECT: properly formats the given cell
+  // EFFECT: properly formats the given cell (border, text size, font, height)
   void formatCell(Label cell) {
     Font font = new Font("Arial", this.textSize());
     cell.setFont(font);
@@ -358,7 +374,7 @@ public class View {
   }
   
   // returns a button that increases the cell width at the given column
-  // TODO: remove the minimum row width (30) and change (5)
+  // TODO: remove the change (5)
   Button plusButton(int column) {
     Button plus = new Button("+");
     plus.setPrefSize(this.rowHeight(), this.rowHeight());
@@ -372,7 +388,6 @@ public class View {
   }
   
   // returns a ChoiceBox for sorting
-  // TODO: add actual sorting
   // TODO: figure out a way to do priority?
   MenuButton sortButton(int column, ToggleGroup singleSort) {
     MenuButton sort = new MenuButton("Sort:");
@@ -426,7 +441,6 @@ public class View {
   int firstVisibleRow() {
     double position = this.scrollScreen.getVvalue();
     double screenHeight = this.scrollScreen.getHeight();
-    //TODO: simplify this? It wouldn't be much less efficient to just draw all screenHeight rows in both directions...
     return Math.max(0, 
         (int) ((this.controller.numRowsVisible() * position) - (position * screenHeight / this.rowHeight())) - 2);
   }
@@ -441,8 +455,7 @@ public class View {
   
   // EFFECT: resets the screen
   void resetScreen() {
-    // TODO: store this as a variable? it will be helpful for dragging to change row width if I decide to do that.
-    int width = 0;
+    int width = 0; // TODO: remove this?
     for (int i = 0; i < this.rowWidth.size(); i++) {
       width += this.rowWidth(i);
     }
@@ -456,10 +469,6 @@ public class View {
     // setting ScrollScreen's width
     //this.scrollScreen.setMinWidth(this.dataScreen.getWidth());
     
-    // drawing the locked rows
-    // TODO: separate these out?
-    
-    //this.lockedScreen.setMinHeight(this.controller.lockedRowsLength() * this.rowHeight());
     
     // drawing the header rows
     this.headerScreen.getChildren().clear();
@@ -473,6 +482,7 @@ public class View {
     this.headerScreen.setPrefHeight(this.controller.headersLength() * this.rowHeight());
     
     // drawing the locked rows
+    //this.lockedScreen.setMinHeight(this.controller.lockedRowsLength() * this.rowHeight());
     //this.lockedScreen.setMaxWidth(width);
     //this.lockedScreen.setMinWidth(width);
     //this.lockedScreen.setPrefWidth(width);

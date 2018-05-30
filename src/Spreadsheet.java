@@ -63,17 +63,6 @@ public class Spreadsheet {
     }
   }
   
-  // TODO: is this necessary?
-  // EFFECT: displays all of the rows
-  // TODO: also resets the predicates?
-  /*
-  void resetFilter() {
-    for (Row r : this.data) {
-      r.setDisplay(true);
-    }
-  }
-   */
-  
   // EFFECT: sorts the rows by order of the comparators (highest priority is first)
   void sort(List<Comparator<Row>> sorters, boolean sortAll) {
     ArrayList<Comparator<Row>> comparators = new ArrayList<>(sorters.size() + 2);
@@ -88,16 +77,6 @@ public class Spreadsheet {
       heapsort.heapsort(this.data, new StackingComparator(comparators), this.numRowsVisible);
     }
   }
-  
-  // EFFECT: sorts the rows by their serial ID
-  // TODO: also resets the comparators?
-  // TODO: is this necessary?
-  /*
-  void resetSort() {
-    Heapsort<Row> heapsort = new Heapsort<Row>();
-    heapsort.heapsort(this.data, new IDComparator());
-  }
-   */
   
   // TODO: is this necessary?
   // EFFECT: highlights any rows that match the predicates

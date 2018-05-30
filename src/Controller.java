@@ -85,7 +85,7 @@ public class Controller {
     return lockButton;
   }
   
- //returns a CheckBox that controls whether the given row is locked
+ // returns a CheckBox that controls whether the given row is locked
  CheckBox getLockedCheckBox(int r) {
    Row row = this.spreadsheet.getLockedRow(r);
    CheckBox lockButton = new CheckBox();
@@ -95,6 +95,26 @@ public class Controller {
      this.view.resetScreen();
    });
    return lockButton;
+ }
+ 
+ // returns a Button that jumps to the given row when clicked
+ Button getJumpToButton(int r) {
+   Row row = this.spreadsheet.getLockedRow(r);
+   Button jumpToButton = new Button(" Find ");
+   jumpToButton.setOnAction(actionEvent -> {
+     int loc = 0;
+     int rowID = row.getID();
+     for (int i = 0; i < this.length(); i++) {
+       if (rowID == this.spreadsheet.getRow(i).getID()) {
+         loc = i;
+       }
+     }
+     this.view.jumpTo(loc);
+   });
+   if (! row.getDisplay()) {
+     jumpToButton.setDisable(true);
+   }
+   return jumpToButton;
  }
  
  // is the given header row visible?
