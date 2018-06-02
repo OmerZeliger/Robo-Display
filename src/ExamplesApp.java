@@ -39,8 +39,8 @@ public class ExamplesApp {
     this.rowB = new Row(new ArrayList<String>(Arrays.asList("1.0", "0.0", "a", "f")), 1);
     this.rowC = new Row(new ArrayList<String>(Arrays.asList("2.0", "0.0", "z", "g")), 2);
     
-    this.sheet1 = new Spreadsheet(new ArrayList<Row>(Arrays.asList(row1, row2, row3)));
-    this.sheetA = new Spreadsheet(new ArrayList<Row>(Arrays.asList(rowA, rowB, rowC)));
+    this.sheet1 = new Spreadsheet(new ArrayList<Row>(Arrays.asList(row1, row2, row3)), new ArrayList<Row>());
+    this.sheetA = new Spreadsheet(new ArrayList<Row>(Arrays.asList(rowA, rowB, rowC)), new ArrayList<Row>());
     
     this.id = new IDComparator();
     this.abc2 = new Alphabetize(2);

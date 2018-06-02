@@ -53,6 +53,9 @@ public class NumberComparator implements Comparator<Row> {
   // checks whether the first letter of the given String is a number
   // this reduces the number of exceptions thrown in the try-catch inside compare
   boolean maybeParseable(String s) {
+    if (s.length() <= 0) {
+      return false;
+    }
     String firstLetter = s.substring(0, 1);
     return firstLetter.equals("0")
         || firstLetter.equals("1")

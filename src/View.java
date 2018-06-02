@@ -60,9 +60,9 @@ public class View {
   List<Integer> rowWidth;
   double zoom;
   
-  int keyColumn = 2;
+  int keyColumn = 1;
   List<CheckBox> keys;
-  List<MenuButton> sorts;
+  List<SortMenu> sorts;
   
   // constructor
   View(Spreadsheet spreadsheet) {
@@ -73,12 +73,13 @@ public class View {
     this.dataScreen = new Pane();
     this.dataScreen.setPrefHeight(this.controller.numRowsVisible() * this.rowHeight());
     this.scrollScreen = new ScrollPane(this.dataScreen);
+    // TODO: how to make the locked bars scroll right and left with the data?
     
-    // I don't really understand how this next part works. Research change listeners and observable value later.
     this.scrollScreen.vvalueProperty().addListener(changeListener -> {
       this.resetScreen();
     });
     
+    // the old method that couldn't reset the screen
     /*
     this.scrollScreen.vvalueProperty().addListener(new ChangeListener<Number>() {
       public void changed(ObservableValue<? extends Number> ov,
@@ -87,8 +88,6 @@ public class View {
       }
     });
      */
-    
-    //this.scrollScreen.setPrefWidth(450); // TODO: revisit, make this not terrible
     
     // harder to find values
     int maxWidth = this.controller.maxRowLength();
@@ -101,6 +100,14 @@ public class View {
     // finding all unique keys
     // TODO: make the sidebar zoomable
     LinkedList<String> uniqueKeys = new LinkedList<String>();
+    // going through the keys first
+    for (int i = 0; i < this.controller.headerLength(); i++) {
+      String key = this.controller.getHeader(i).get(this.keyColumn);
+      if (! uniqueKeys.contains(key)) {
+        uniqueKeys.add(key);
+      }
+    }
+    // going through the spreadsheet next
     for (int i = 0; i < this.controller.length(); i++) {
       String key = this.controller.getRow(i).get(this.keyColumn);
       if (! uniqueKeys.contains(key)) {
@@ -117,14 +124,15 @@ public class View {
       this.keys.add(filterButton);
     }
     this.filterScreen = new VBox();
-    this.filterScreen.setPrefWidth(75); // TODO: revisit this
+    this.filterScreen.setPrefWidth(120); // TODO: revisit this
+    this.filterScreen.setMinWidth(120);
     this.filterScreen.getChildren().add(new Label("Show:"));
     this.filterScreen.getChildren().addAll(this.keys);
     
-    this.sorts = new ArrayList<MenuButton>(maxWidth);
+    this.sorts = new ArrayList<SortMenu>(maxWidth);
     ToggleGroup singleSort = new ToggleGroup();
     for (int i = 0; i < maxWidth; i++) {
-      sorts.add(this.sortButton(i, singleSort));
+      sorts.add(this.sortButton(singleSort));
     }
     
     // creating the locked rows pane
@@ -170,17 +178,17 @@ public class View {
   void sort(boolean sortAll) {
     LinkedList<Comparator<Row>> sorters = new LinkedList<>();
     for (int i = 0; i < this.sorts.size(); i++) {
-      MenuButton b = this.sorts.get(i);
-      if (((RadioMenuItem) b.getItems().get(0)).isSelected()) {
+      SortMenu b = this.sorts.get(i);
+      if (b.alphabetizeSelected()) {
         sorters.add(new ColumnExistsComparator(i));
         sorters.add(new Alphabetize(i));
       }
-      else if (((RadioMenuItem) b.getItems().get(1)).isSelected()) {
+      else if (b.sortIncreasingSelected()) {
         sorters.add(new ColumnExistsComparator(i));
         sorters.add(new IsNumberComparator(i));
         sorters.add(new NumberComparator(i));
       }
-      else if (((RadioMenuItem) b.getItems().get(2)).isSelected()) {
+      else if (b.sortDecreasingSelected()) {
         sorters.add(new ColumnExistsComparator(i));
         sorters.add(new IsNumberComparator(i));
         sorters.add(new ReverseComparator(new NumberComparator(i)));
@@ -264,7 +272,7 @@ public class View {
   
   // EFFECT: jumps to the given row
   void jumpTo(int row) {
-    double percent = (1.0 * row) / Math.max(1.0 * this.controller.numRowsVisible() - 1, 1);
+    double percent = (1.0 * row) / Math.max(1.0 * this.controller.numRowsVisible() - 1, 1); // TODO: figure out better math...
     this.scrollScreen.setVvalue(percent);
   }
   
@@ -334,7 +342,7 @@ public class View {
       HBox cell = new HBox();
       cell.getChildren().add(this.minusButton(i));
       cell.getChildren().add(this.plusButton(i));
-      cell.getChildren().add(this.sorts.get(i));
+      cell.getChildren().add(this.sorts.get(i).getSortButton());
       //cell.setPrefWidth(this.rowWidth(i));
       cell.setMaxWidth(this.rowWidth(i));
       cell.setMinWidth(this.rowWidth(i));
@@ -343,12 +351,11 @@ public class View {
     }
     
     //adding a "clear sort" button
-    Button clearSort = new Button("Clear");
+    Button clearSort = new Button(" Clear ");
+    clearSort.setPadding(Insets.EMPTY);
     clearSort.setOnAction(actionEvent -> {
-      for (MenuButton m : this.sorts) {
-        for (MenuItem r : m.getItems()) {
-          ((RadioMenuItem) r).setSelected(false);
-        }
+      for (SortMenu m : this.sorts) {
+        m.deselectAll();
       }
       this.sort(false);
     });
@@ -387,54 +394,10 @@ public class View {
     return plus;
   }
   
-  // returns a ChoiceBox for sorting
+  // returns a SortMenu for sorting
   // TODO: figure out a way to do priority?
-  MenuButton sortButton(int column, ToggleGroup singleSort) {
-    MenuButton sort = new MenuButton("Sort:");
-    sort.setPrefHeight(this.rowHeight());
-    sort.setMinHeight(this.rowHeight());
-    sort.setMinWidth(this.rowHeight());
-    sort.setPadding(new Insets(-5)); // TODO: does this work with zooming?
-    
-    //RadioMenuItem noSelection = new RadioMenuItem("None");
-    RadioMenuItem alphabetize = new RadioMenuItem("Alphabetize");
-    RadioMenuItem sortIncreasing = new RadioMenuItem("Sort small to large");
-    RadioMenuItem sortDecreasing = new RadioMenuItem("Sort large to small");
-    
-    singleSort.getToggles().add(alphabetize);
-    singleSort.getToggles().add(sortIncreasing);
-    singleSort.getToggles().add(sortDecreasing);
-    
-    //noSelection.setOnAction(actionEvent -> {
-    //  this.sort();
-    //});
-    
-    alphabetize.setOnAction(actionEvent -> {
-      this.sort(false);
-    });
-    
-    sortIncreasing.setOnAction(actionEvent -> {
-      this.sort(false);
-    });
-    
-    sortDecreasing.setOnAction(actionEvent -> {
-      this.sort(false);
-    });
-    
-    //ToggleGroup menuItems = new ToggleGroup();
-    //menuItems.getToggles().add(noSelection);
-    //menuItems.getToggles().add(alphabetize);
-    //menuItems.getToggles().add(sortIncreasing);
-    //menuItems.getToggles().add(sortDecreasing);
-    
-    //sort.getItems().add(noSelection);
-    sort.getItems().add(alphabetize);
-    sort.getItems().add(sortIncreasing);
-    sort.getItems().add(sortDecreasing);
-    
-    //noSelection.setSelected(true);
-    
-    return sort;
+  SortMenu sortButton(ToggleGroup singleSort) {
+    return new SortMenu(this, singleSort);
   }
   
   // what is the first on-screen row?
@@ -458,6 +421,10 @@ public class View {
     int width = 0; // TODO: remove this?
     for (int i = 0; i < this.rowWidth.size(); i++) {
       width += this.rowWidth(i);
+    }
+    
+    for (SortMenu m : this.sorts) {
+      m.rename();
     }
     
     // drawing the rows

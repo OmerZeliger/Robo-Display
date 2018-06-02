@@ -1,4 +1,5 @@
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -181,12 +182,15 @@ public class Main extends Application {
       sheet.getChildren().addAll(listy.subList(min, max));
     });
      */
+    
+    /*
+    ArrayList<Row> headers = new ArrayList<Row>(3);
+    headers.add(new Row(new ArrayList<String>(Arrays.asList("-1", "-1", "HI", "information about stuff")), 0));
+    headers.add(new Row(new ArrayList<String>(Arrays.asList("-1", "-1", "HOI", "rand. int", "nonsense")), 1));
+    headers.add(new Row(new ArrayList<String>(Arrays.asList("-1", "-1", "HEYA")), 2));
+    
     int length = 50000;
     ArrayList<Row> rows = new ArrayList<Row>(length);
-    rows.add(new Row(new ArrayList<String>(Arrays.asList("-1", "-1", "HI", "information about stuff")), 0));
-    rows.add(new Row(new ArrayList<String>(Arrays.asList("-1", "-1", "HOI", "rand. int", "nonsense")), 1));
-    rows.add(new Row(new ArrayList<String>(Arrays.asList("-1", "-1", "HEYA")), 2));
-    
     for (int i = 0; i < length; i++) {
       String s = Integer.toString(i);
       Row row;
@@ -202,9 +206,15 @@ public class Main extends Application {
       rows.add(row);
     }
     //rows.add(new Row(new ArrayList<String>(Arrays.asList("HOI i'm a long info message rEad mE!!1!")), length));
+     */
     
+    // file name = "testing.csv"
+    //Path path = new Path("testing.csv");
+    File file = new File("testing.csv");
+    Translator translator = new Translator();
+    Spreadsheet spreadsheet = translator.translate(file);
     
-    Spreadsheet spreadsheet = new Spreadsheet(rows);
+    //Spreadsheet spreadsheet = new Spreadsheet(rows, headers);
     View view = new View(spreadsheet);
     view.resetScreen();
     //view.zoom = 1.5;

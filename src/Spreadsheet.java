@@ -12,31 +12,13 @@ public class Spreadsheet {
   int numRowsVisible; // the number of visible rows
   List<Row> headers; // TODO: remove headers from data?
   
-  // all header rows will have a timestamp of -1
-  Predicate<Row> headerChooser = new KeyPredicate(0, "-1");
-  
   // constructor
-  Spreadsheet(ArrayList<Row> data) {
+  Spreadsheet(ArrayList<Row> data, ArrayList<Row> headers) {
     this.data = data;
+    this.headers = headers;
     this.lockedRows = new LinkedList<Row>();
     //this.highlighted = new LinkedList<Predicate<Row>>();
     this.numRowsVisible = this.data.size();
-    
-    // keeping track of all header rows
-    // TODO: move this to the "translate" step?
-    LinkedList<Row> headers = new LinkedList<Row>();
-    for (Row r : this.data) {
-      if (this.headerChooser.test(r)) {
-        headers.add(r);
-      }
-      //else { //uncomment this if the headers will always be at the start
-      //  break;
-      //}
-    }
-    this.headers = new ArrayList<Row>(headers.size());
-    for (Row r : headers) {
-      this.headers.add(r);
-    }
   }
   
   // methods
@@ -54,12 +36,18 @@ public class Spreadsheet {
   void filter(List<Predicate<Row>> filters) {
     Predicate<Row> pred = new OrPredicate(filters);
     this.numRowsVisible = 0;
+    // filtering the data
     for (Row r : this.data) {
       boolean display = pred.test(r);
       r.setDisplay(display);
       if (display) {
         this.numRowsVisible += 1;
       }
+    }
+    // filtering the headers
+    for (Row r : this.headers) {
+      boolean display = pred.test(r);
+      r.setDisplay(display);
     }
   }
   
@@ -139,6 +127,11 @@ public class Spreadsheet {
   // returns the number of rows in the spreadsheet
   int length() {
     return this.data.size();
+  }
+  
+  // returns the number of header rows
+  int headerLength() {
+    return this.headers.size();
   }
   
   int lockedRowsLength() {
