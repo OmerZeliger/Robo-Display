@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Predicate;
 
+// TODO: create cells for different data types (number/string)
 public class Spreadsheet {
   // fields
   List<Row> data;

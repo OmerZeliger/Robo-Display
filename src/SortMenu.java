@@ -13,6 +13,8 @@ public class SortMenu {
   RadioMenuItem alphabetize;
   RadioMenuItem sortIncreasing;
   RadioMenuItem sortDecreasing;
+  
+  String highlightColor = "AABBFF";
 
   // constructor
   SortMenu(View view, ToggleGroup singleSort) {
@@ -79,15 +81,19 @@ public class SortMenu {
   void rename() {
     if (this.alphabetize.isSelected()) {
       this.sortButton.setText("abc");
+      this.sortButton.setStyle("-fx-background-color: #" + this.highlightColor + ";");
     }
     else if (this.sortIncreasing.isSelected()) {
       this.sortButton.setText("123");
+      this.sortButton.setStyle("-fx-background-color: #" + this.highlightColor + ";");
     }
     else if (this.sortDecreasing.isSelected()) {
       this.sortButton.setText("321");
+      this.sortButton.setStyle("-fx-background-color: #" + this.highlightColor + ";");
     }
     else {
       this.sortButton.setText("Sort");
+      this.sortButton.setStyle(null);
     }
   }
 }

@@ -37,6 +37,8 @@ import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+// TODO: add numbers on the side (in another ScrollPane?)
+
 // displays stuff on the screen
 public class View {
   // fields
@@ -52,16 +54,17 @@ public class View {
 
   int defaultRowWidth = 75;
   int baseTextSize = 12;
-  String alternatingBGColor1 = "FFEEEE";
+  String alternatingBGColor1 = "EEEEEE";
   String alternatingBGColor2 = "E0EEFF";
   String lockColor = "B0CCFF";
   String headerColor = "8899EE";
+  String controlColor = "AAAAAA";
   
   List<Integer> rowWidth;
   double zoom;
   
-  int keyColumn = 1;
-  List<CheckBox> keys;
+  int keyColumn = 1; // TODO: change back to 2 when I get an updated CSV file
+  List<CheckBox> keys; // TODO: add color, change to FilterOption (or some such other class)
   List<SortMenu> sorts;
   
   // constructor
@@ -215,6 +218,7 @@ public class View {
   }
   
   // TODO: make less messy!
+  // TODO: add highlight for jumping?
   /**
    * Translates the requested rows into VBoxes with the appropriate positions.
    * Start inclusive, end not inclusive.
@@ -274,6 +278,7 @@ public class View {
   void jumpTo(int row) {
     double percent = (1.0 * row) / Math.max(1.0 * this.controller.numRowsVisible() - 1, 1); // TODO: figure out better math...
     this.scrollScreen.setVvalue(percent);
+    // TODO: highlight the jumped-to row? maybe add an argument to draw rows?
   }
   
   // draws all of the headers
@@ -307,9 +312,11 @@ public class View {
     Label cell = new Label();
     this.formatCell(cell);
     for (int i = 0; i < strings.size(); i++) {
-      cell = new Label(strings.get(i));
+      String cellText = strings.get(i);
+      cell = new Label(cellText);
       this.formatCell(cell);
       cell.setPrefWidth(this.rowWidth(i)); 
+      cell.setTooltip(new Tooltip(cellText)); // TODO: keep the tooltip? Is it useful?
       labels.add(cell);
     }
     
@@ -346,7 +353,7 @@ public class View {
       //cell.setPrefWidth(this.rowWidth(i));
       cell.setMaxWidth(this.rowWidth(i));
       cell.setMinWidth(this.rowWidth(i));
-      cell.setStyle("-fx-border-color: black; -fx-background-color: blue;");
+      cell.setStyle("-fx-border-color: black; -fx-background-color: " + this.controlColor + ";");// + this.controlColor +  ";");
       controlRow.getChildren().add(cell);
     }
     
